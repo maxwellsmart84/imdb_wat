@@ -1,10 +1,11 @@
 
-var _ = require('underscore');
+
 var $ = require('jquery');
-var MovieCollection = require('./movieCollection');
-var MovieModel = require('./movieModels');
+var layoutView = require('./layoutView');
+
+
 
 
 $(document).ready(function(){
-
+new layoutView();
 });

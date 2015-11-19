@@ -1,16 +1,85 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-
-var _ = require('underscore');
+var Backbone = require('backbone');
 var $ = require('jquery');
+var _ = require('underscore');
+var tmpl = require('./templates');
+var MovieModel = require("./movieModels");
+Backbone.$ = $;
+
+
+module.exports = Backbone.View.extend ({
+  class: 'addMovie',
+  events: {
+    'submit form': 'onSubmitData'
+  },
+  initialize: function(){
+    if (!this.model) {
+      this.model = new MovieModel();
+    }
+  },
+  onSubmitData: function (event) {
+    event.preventDefault();
+    var newMovie = {
+        title: this.el$.find('input[name="title"]').val(),
+        picture: this.el$.find('input[name="img"]').val(),
+        year: this.el$.find('input[name="year"]').val(),
+        rating: this.el$.find('input[name="rating"]').val(),
+        plot: this.el$.find('input[name="plot"]').val(),
+      };
+      this.model.set(newMovie);
+      this.model.save();
+      this.$el.find('input, textarea').val('');
+    },
+    template: _.template(tmpl.form),
+    render: function(){
+      var markUp = this.template(this.model.toJSON());
+      this.$el.html(markup);
+      return(this);
+    }
+});
+
+},{"./movieModels":7,"./templates":11,"backbone":8,"jquery":9,"underscore":10}],2:[function(require,module,exports){
+var Backbone = require('backbone');
+var $ = require('jquery');
+var _ = require('underscore');
+var tmpl = require('./templates');
+var FormView = require('./formView');
+var MoviesView = require('./movieCollectionView');
 var MovieCollection = require('./movieCollection');
-var MovieModel = require('./movieModels');
+Backbone.$ = $;
 
-
-$(document).ready(function(){
+module.exports = Backbone.View.extend ({
+  el: '#layoutView',
+  initialize: function(){
+    var self = this;
+    var formHTML = new FormView();
+    var movieHTML = new MoviesView();
+    var movieCollection = new BookCollection();
+    movieCollection.fetch().then(function(){
+      console.log('this works');
+      var moviesView = new MoviesView({collection: movieCollection});
+      console.log('this is working');
+      self.$el.find('form').html(formHTML.render().el);
+      self.$el.find('ul').html(movieHTML.render().el);
+    });
+  }
 
 });
 
-},{"./movieCollection":2,"./movieModels":3,"jquery":5,"underscore":6}],2:[function(require,module,exports){
+},{"./formView":1,"./movieCollection":4,"./movieCollectionView":5,"./templates":11,"backbone":8,"jquery":9,"underscore":10}],3:[function(require,module,exports){
+
+
+var $ = require('jquery');
+var layoutView = require('./layoutView');
+
+
+
+
+$(document).ready(function(){
+new layoutView();
+});
+
+},{"./layoutView":2,"jquery":9}],4:[function(require,module,exports){
 
 var Backbone = require('backbone');
 var PictureModel = require('./movieModels');
@@ -20,7 +89,55 @@ module.exports = Backbone.Collection.extend({
   model: PictureModel
 });
 
-},{"./movieModels":3,"backbone":4}],3:[function(require,module,exports){
+},{"./movieModels":7,"backbone":8}],5:[function(require,module,exports){
+
+
+var Backbone = require('backbone');
+var $ = require('jquery');
+var _ = require('underscore');
+Backbone.$ = $;
+var MovieView = require('./movieModelView');
+
+
+module.exports = Backbone.View.extend ({
+  el: '.container',
+
+  addOne: function (model){
+      console.log(model);
+      var modelView= new MovieView({model:model});
+      this.$el.append(modelView.render().el);
+  },
+
+  addAll: function (){
+    _.each(this.collection.model, this.addOne, this);
+  },
+
+  initialize: function(){
+    this.addAll();
+  }
+
+});
+
+},{"./movieModelView":6,"backbone":8,"jquery":9,"underscore":10}],6:[function(require,module,exports){
+var $ = require('jquery');
+var _ = require('underscore');
+var Backbone = require('backbone');
+var tmpl = require('./templates');
+Backbone.$ = $;
+
+module.exports = Backbone.View.extend ({
+    tagName: 'li',
+    initialize: function(){},
+    template: _.template(tmpl.movie),
+    render: function (){
+      var markUp = this.template(this.model.toJSON());
+      this.$el.html(markUp);
+      return this;
+    }
+
+});
+
+},{"./templates":11,"backbone":8,"jquery":9,"underscore":10}],7:[function(require,module,exports){
 
 
 var Backbone = require('backbone');
@@ -29,19 +146,21 @@ var Backbone = require('backbone');
 module.exports = Backbone.Model.extend ({
   urlRoot: 'http://tiny-tiny.herokuapp.com/collections/maxsimdb',
   idAttribute: '_id',
-  defaults: {
+  defaults: function() {
+    return {
     rating: 0,
     picture: "http://ia.media-imdb.com/images/M/MV5BMTA4MDQxNTk2NDheQTJeQWpwZ15BbWU3MDE2NjIyODk@._V1_SX214_AL_.jpg",
     title: "Blade Runner",
     plot: "A blade runner must pursue and try to terminate four replicants who stole a ship in space and have returned to Earth to find their creator.",
     year: 1982,
-  },
+  };
+},
   initialize: function(){
 
   }
 });
 
-},{"backbone":4}],4:[function(require,module,exports){
+},{"backbone":8}],8:[function(require,module,exports){
 (function (global){
 //     Backbone.js 1.2.3
 
@@ -1939,7 +2058,7 @@ module.exports = Backbone.Model.extend ({
 }));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"jquery":5,"underscore":6}],5:[function(require,module,exports){
+},{"jquery":9,"underscore":10}],9:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.4
  * http://jquery.com/
@@ -11151,7 +11270,7 @@ return jQuery;
 
 }));
 
-},{}],6:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -12701,4 +12820,42 @@ return jQuery;
   }
 }.call(this));
 
-},{}]},{},[1]);
+},{}],11:[function(require,module,exports){
+module.exports = {
+  movie: [
+    '<h2><%= title %></h2>',
+    '<h4><%= year %></h4>',
+    '<img src= "<%= picture %>">',
+    '<h3><%= rating %></h3>',
+    '<p><%= plot %></p>',
+  ].join(""),
+
+  form: [
+    '<form>',
+      '<div cl ass="form-group">',
+        '<label for="titleInput">Movie Title</label>',
+        '<input id= "titleInput" type="text" name="title" value="">',
+      '</div>',
+      '<div class="form-group">',
+        '<label for="imgInput">Movie Cover</label>',
+        '<input id= "imgInput" type="text" name="image" value="">',
+      '</div>',
+      '<div class="form-group">',
+        '<label for="plotInput">Plot</label>',
+        '<input id = "plotInput" type="text" name="plot" value="">',
+      '</div>',
+      '<div class="form-group">',
+        '<label for="ratingInput">Rating</label>',
+        '<input id="ratingInput" type="number" name="rating" value="">',
+      '</div>',
+      '<div class="form-group">',
+        '<label for="releaseInput">Year Made</label>',
+        '<input id ="releaseInput" type="number" name="year" value="">',
+      '</div>',
+      '<button id="submitBtn" type="submit" class= "btn btn-lg"name="button">Submit</button>',
+      '</form>',
+
+  ].join("")
+};
+
+},{}]},{},[3]);

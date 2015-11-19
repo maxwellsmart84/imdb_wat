@@ -5,24 +5,23 @@ var $ = require('jquery');
 var _ = require('underscore');
 Backbone.$ = $;
 var MovieView = require('./movieModelView');
-var MovieModel = require('./movieModels');
+
 
 module.exports = Backbone.View.extend ({
   el: '.container',
-  events: {
-    'submit #submitBtn': 'submitData'
+
+  addOne: function (model){
+      console.log(model);
+      var modelView= new MovieView({model:model});
+      this.$el.append(modelView.render().el);
   },
 
-  submitData: function (event){
-    event.preventDefault();
-    console.log("fuck this");
-    var titleIn = $('#titleInput').val();
-    var imgIn = $('#imgInput').val();
-    var plotIn = $('#plotInput').val();
-    var ratingIn = $('#ratingInput').val();
-    var releaseIn = $('#releaseInput').val();
-    var newMovieIn = new MovieModel({title: titleIn, picture: imgIn, plot: plotIn, year: releaseIn, rating: ratingIn });
-    newMovieIn.save();
+  addAll: function (){
+    _.each(this.collection.model, this.addOne, this);
+  },
+
+  initialize: function(){
+    this.addAll();
   }
 
 });
